@@ -53,13 +53,13 @@ This is the same shift that happened with type checkers: don't write a comment a
 **macOS / Linux / WSL:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell + Git for Windows):**
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/scripts/install.ps1 | iex
 ```
 
 The installer:

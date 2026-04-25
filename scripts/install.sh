@@ -2,7 +2,7 @@
 # install.sh — claude-quality-gate installer (Mac/Linux/WSL/git-bash)
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/scripts/install.sh | bash
 #   bash scripts/install.sh                # from a checkout
 #   QG_PREFIX=$HOME/.local bash install.sh # custom prefix
 #

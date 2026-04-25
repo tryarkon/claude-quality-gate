@@ -7,7 +7,7 @@
   they run via git-bash (shipped with Git for Windows) or WSL.
 
 .EXAMPLE
-  iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 | iex
+  iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/scripts/install.ps1 | iex
 
 .EXAMPLE
   # From a checkout
