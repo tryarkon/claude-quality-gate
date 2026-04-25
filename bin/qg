@@ -56,7 +56,7 @@ ${C_BOLD}EXAMPLES${C_OFF}
   qg dashboard --port 8080
   qg status
 
-Project: https://github.com/leotoone/claude-quality-gate
+Project: https://github.com/tryarkon/claude-quality-gate
 EOF
 }
 

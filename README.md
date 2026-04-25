@@ -6,7 +6,7 @@
 
 *Stop the agent from doing the dumb thing — at the kernel level, not in the prompt.*
 
-[![tests](https://github.com/leotoone/claude-quality-gate/actions/workflows/test.yml/badge.svg)](https://github.com/leotoone/claude-quality-gate/actions)
+[![tests](https://github.com/tryarkon/claude-quality-gate/actions/workflows/test.yml/badge.svg)](https://github.com/tryarkon/claude-quality-gate/actions)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![bash](https://img.shields.io/badge/bash-3.2%2B-success)](docs/WINDOWS.md)
 [![python](https://img.shields.io/badge/python-3.7%2B-success)](docs/QUICKSTART.md)
@@ -53,13 +53,13 @@ This is the same shift that happened with type checkers: don't write a comment a
 **macOS / Linux / WSL:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.sh | bash
 ```
 
 **Windows (PowerShell + Git for Windows):**
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 | iex
 ```
 
 The installer:

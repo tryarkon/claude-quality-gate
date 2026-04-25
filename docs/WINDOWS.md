@@ -13,7 +13,7 @@ Git for Windows ships with `bash.exe` (MSYS2 bash, version 5.x). Claude Code fin
 2. Open a new PowerShell window (so the updated `PATH` is picked up) and run:
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 | iex
 ```
 
 3. Verify:
@@ -49,7 +49,7 @@ wsl
 2. Inside WSL, install normally:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.sh | bash
 ```
 
 3. **Important:** Claude Code on Windows needs to invoke the WSL hooks. Edit `%USERPROFILE%\.claude\settings.json` (the *Windows* one) and rewrite each hook entry to call WSL:
@@ -78,7 +78,7 @@ If you only ever use Claude Code from inside WSL itself, you don't need this —
 The piped install (`iwr | iex`) doesn't accept parameters. If you want to install via WSL through PowerShell:
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.ps1 -OutFile install.ps1
+iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 -OutFile install.ps1
 .\install.ps1 -UseWSL
 ```
 

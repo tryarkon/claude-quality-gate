@@ -7,7 +7,7 @@
   they run via git-bash (shipped with Git for Windows) or WSL.
 
 .EXAMPLE
-  iwr -useb https://raw.githubusercontent.com/leotoone/claude-quality-gate/main/install.ps1 | iex
+  iwr -useb https://raw.githubusercontent.com/tryarkon/claude-quality-gate/main/install.ps1 | iex
 
 .EXAMPLE
   # From a checkout
@@ -23,7 +23,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = "leotoone/claude-quality-gate"
+$Repo = "tryarkon/claude-quality-gate"
 
 function Step($msg)  { Write-Host "`n$msg" -ForegroundColor White }
 function Ok($msg)    { Write-Host "  OK   $msg" -ForegroundColor Green }

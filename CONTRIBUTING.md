@@ -25,7 +25,7 @@ This is an artifact. We use it in our own production setup. We open-sourced it b
 ### Setup
 
 ```bash
-git clone https://github.com/leotoone/claude-quality-gate
+git clone https://github.com/tryarkon/claude-quality-gate
 cd claude-quality-gate
 pytest tests/                     # run the suite
 ```
