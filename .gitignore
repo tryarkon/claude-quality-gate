@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# State / runtime artifacts (the hooks themselves use /tmp by default)
+*.log
+qg-metrics.log
+/tmp/
+
+# Local Claude Code overrides — should not leak into the public repo
+.claude/
+CLAUDE.md
+HANDOFF.md
+PROJECT.toml
+claude.command
+lib/
+
+# Internal dev tools (sync utilities, etc.) — not for public consumption
+.devtools/
+
+# Build / release
+dist/
+build/
+*.tar.gz
+*.zip
+*.egg-info/
+
+# Env
+.env
+.env.*
+!.env.example

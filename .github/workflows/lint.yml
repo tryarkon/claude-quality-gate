@@ -1,0 +1,42 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on hooks
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+          scandir: ./hooks
+        env:
+          # SC1091 — sourcing files not on path (hook-utils.sh located via env)
+          # SC2155 — declare-and-assign warning (intentional pattern)
+          # SC2086 — quoted-args nag (we audit case-by-case)
+          # SC2034 — unused vars (some are exported for sourced scripts)
+          SHELLCHECK_OPTS: -e SC1091 -e SC2155 -e SC2086 -e SC2034
+
+  ruff:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint scripts/ tests/ bench/
+        run: ruff check scripts/ tests/ bench/

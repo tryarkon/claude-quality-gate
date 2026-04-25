@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>qg dashboard — claude-quality-gate</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">▣</span>
+      <span class="name">qg <span class="dim">·</span> claude-quality-gate</span>
+      <span class="version" id="version">v0.1.1</span>
+    </div>
+    <div class="status">
+      <span class="dot" id="health-dot" title="connected"></span>
+      <span id="health-text" class="dim">connecting…</span>
+      <span class="dim sep">·</span>
+      <span class="dim" id="last-update">—</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero metrics -->
+    <section class="hero">
+      <article class="card big" data-accent="green">
+        <div class="card-label">Time saved</div>
+        <div class="card-value"><span id="m-time">—</span><span class="unit">min</span></div>
+        <div class="card-foot dim">across <span id="m-events">0</span> events</div>
+      </article>
+
+      <article class="card big" data-accent="cyan">
+        <div class="card-label">Tokens saved</div>
+        <div class="card-value"><span id="m-tokens">—</span></div>
+        <div class="card-foot dim">on context-bloat reads</div>
+      </article>
+
+      <article class="card big" data-accent="magenta">
+        <div class="card-label">Blocks fired</div>
+        <div class="card-value"><span id="m-blocks">—</span></div>
+        <div class="card-foot dim"><span id="m-warns">0</span> warnings</div>
+      </article>
+
+      <article class="card big" data-accent="amber">
+        <div class="card-label">Sessions tracked</div>
+        <div class="card-value"><span id="m-sessions">—</span></div>
+        <div class="card-foot dim">since <span id="m-first">—</span></div>
+      </article>
+    </section>
+
+    <!-- Timeline -->
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Activity (last 24h)</h2>
+        <div class="legend">
+          <span class="legend-item"><i class="sw block"></i> blocks</span>
+          <span class="legend-item"><i class="sw warn"></i> warns</span>
+        </div>
+      </header>
+      <div id="timeline" class="timeline">
+        <div class="empty">No activity yet — open a Claude Code session and trigger a gate.</div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Top violations -->
+      <section class="panel">
+        <header class="panel-head"><h2>Top violations</h2></header>
+        <table class="data" id="violations">
+          <thead>
+            <tr><th>Hook</th><th>Kind</th><th class="num">Count</th></tr>
+          </thead>
+          <tbody><tr><td colspan="3" class="empty">no violations</td></tr></tbody>
+        </table>
+      </section>
+
+      <!-- Sessions -->
+      <section class="panel">
+        <header class="panel-head"><h2>Recent sessions</h2></header>
+        <table class="data" id="sessions">
+          <thead>
+            <tr><th>SID</th><th class="num">Events</th><th class="num">Blocks</th><th>Last seen</th></tr>
+          </thead>
+          <tbody><tr><td colspan="4" class="empty">no sessions</td></tr></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- Recent feed -->
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Recent events</h2>
+        <span class="dim">tail of <code id="log-path">/tmp/qg-metrics.log</code></span>
+      </header>
+      <ul id="feed" class="feed">
+        <li class="empty">no events</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="dim">claude-quality-gate · Apache-2.0 · </span>
+    <a href="https://github.com/leotoone/claude-quality-gate" target="_blank">github.com/leotoone/claude-quality-gate</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# qg — claude-quality-gate CLI
+# Subcommands: install / uninstall / status / config / dashboard / test / version / help
+
+set -e
+
+VERSION="0.1.1"
+QG_HOME="${QG_HOME:-$HOME/.claude}"
+HOOKS_DIR="$QG_HOME/hooks"
+SETTINGS="$QG_HOME/settings.json"
+DEFAULT_PORT="${QG_DASHBOARD_PORT:-7777}"
+
+# Resolve install root — works whether qg is symlinked or run directly.
+_resolve_root() {
+    local src="${BASH_SOURCE[0]}"
+    while [ -L "$src" ]; do
+        src="$(readlink "$src")"
+    done
+    cd "$(dirname "$src")/.." 2>/dev/null && pwd
+}
+QG_ROOT="${QG_ROOT:-$(_resolve_root)}"
+
+# --- Colors (TTY only) ----------------------------------------------------
+if [ -t 1 ]; then
+    C_BOLD='\033[1m'; C_DIM='\033[2m'; C_OFF='\033[0m'
+    C_GREEN='\033[32m'; C_YELLOW='\033[33m'; C_RED='\033[31m'; C_CYAN='\033[36m'
+else
+    C_BOLD=''; C_DIM=''; C_OFF=''; C_GREEN=''; C_YELLOW=''; C_RED=''; C_CYAN=''
+fi
+
+ok()    { printf "${C_GREEN}✓${C_OFF} %s\n" "$1"; }
+warn()  { printf "${C_YELLOW}!${C_OFF} %s\n" "$1"; }
+fail()  { printf "${C_RED}✗${C_OFF} %s\n" "$1" >&2; }
+info()  { printf "${C_CYAN}·${C_OFF} %s\n" "$1"; }
+
+usage() {
+    cat <<EOF
+${C_BOLD}qg${C_OFF} — claude-quality-gate CLI (v${VERSION})
+
+${C_BOLD}USAGE${C_OFF}
+  qg <command> [options]
+
+${C_BOLD}COMMANDS${C_OFF}
+  install            Install hooks into ~/.claude/ (preserves existing settings)
+  uninstall          Remove hooks; restore settings.json from backup
+  status             Show profile, hooks installed, dashboard URL
+  config [k] [v]     Get/set config (QG_PROFILE, QG_DISABLED_HOOKS, ...)
+  dashboard          Open the metrics dashboard at http://localhost:${DEFAULT_PORT}
+  test               Smoke-test all hooks (no Claude Code required)
+  version            Print version
+  help               Show this message
+
+${C_BOLD}EXAMPLES${C_OFF}
+  qg install
+  qg config QG_PROFILE standard
+  qg dashboard --port 8080
+  qg status
+
+Project: https://github.com/leotoone/claude-quality-gate
+EOF
+}
+
+# --- install --------------------------------------------------------------
+cmd_install() {
+    info "Source: $QG_ROOT"
+    info "Target: $QG_HOME"
+    if [ ! -d "$QG_ROOT/hooks" ]; then
+        fail "hooks/ directory not found in $QG_ROOT — run from a checkout or use install.sh"
+        exit 1
+    fi
+    bash "$QG_ROOT/scripts/install.sh"
+}
+
+# --- uninstall ------------------------------------------------------------
+cmd_uninstall() {
+    if [ ! -d "$HOOKS_DIR" ]; then
+        warn "Nothing to remove — $HOOKS_DIR does not exist."
+        exit 0
+    fi
+    info "Removing hooks from $HOOKS_DIR (only qg-managed files)"
+    for h in pre-read-gate pre-write-gate pre-bash-gate auto-verify track-activity on-stop-discipline hook-utils; do
+        rm -f "$HOOKS_DIR/${h}.sh"
+    done
+    # Try to restore from latest backup if any.
+    local last_bak
+    last_bak=$(ls -1t "$SETTINGS".bak.* 2>/dev/null | head -1 || true)
+    if [ -n "$last_bak" ]; then
+        cp "$last_bak" "$SETTINGS"
+        ok "Restored settings.json from $last_bak"
+    else
+        warn "No backup found — please review $SETTINGS manually."
+    fi
+    ok "Uninstalled."
+}
+
+# --- status ---------------------------------------------------------------
+cmd_status() {
+    printf "${C_BOLD}claude-quality-gate${C_OFF} v%s\n\n" "$VERSION"
+
+    printf "%-22s %s\n" "Hooks dir:" "$HOOKS_DIR"
+    printf "%-22s %s\n" "Settings:" "$SETTINGS"
+
+    local profile="${QG_PROFILE:-strict}"
+    printf "%-22s %s\n" "Profile (QG_PROFILE):" "$profile"
+
+    local disabled="${QG_DISABLED_HOOKS:-<none>}"
+    printf "%-22s %s\n" "Disabled hooks:" "$disabled"
+
+    local metrics="${QG_METRICS_LOG:-/tmp/qg-metrics.log}"
+    printf "%-22s %s\n" "Metrics log:" "$metrics"
+
+    echo
+    printf "${C_BOLD}Hook files${C_OFF}\n"
+    for h in pre-read-gate pre-write-gate pre-bash-gate track-activity auto-verify on-stop-discipline hook-utils; do
+        if [ -x "$HOOKS_DIR/${h}.sh" ]; then
+            ok "${h}.sh"
+        else
+            warn "${h}.sh — missing"
+        fi
+    done
+
+    echo
+    if [ -f "$metrics" ]; then
+        local lines
+        lines=$(wc -l < "$metrics" | tr -d ' ')
+        printf "${C_BOLD}Activity${C_OFF}: %s metric events (last %d lines via 'tail %s')\n" "$lines" 5 "$metrics"
+    else
+        printf "${C_BOLD}Activity${C_OFF}: no metrics yet (gates not triggered)\n"
+    fi
+
+    echo
+    printf "${C_BOLD}Dashboard${C_OFF}: run 'qg dashboard' → http://localhost:%s\n" "$DEFAULT_PORT"
+}
+
+# --- config ---------------------------------------------------------------
+# qg config                       → list current
+# qg config QG_PROFILE            → print value
+# qg config QG_PROFILE strict     → set value in settings.json env block
+cmd_config() {
+    local key="$1"
+    local value="$2"
+    if [ -z "$key" ]; then
+        info "Current settings (env block):"
+        if [ -f "$SETTINGS" ]; then
+            python3 - "$SETTINGS" <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    env = d.get("env", {})
+    if not env:
+        print("  <empty>")
+    for k, v in env.items():
+        print(f"  {k}={v}")
+except Exception as e:
+    print(f"  (error reading settings.json: {e})")
+PY
+        else
+            warn "no settings.json"
+        fi
+        return
+    fi
+    if [ -z "$value" ]; then
+        python3 - "$SETTINGS" "$key" <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get("env", {}).get(sys.argv[2], ""))
+except Exception:
+    print("")
+PY
+        return
+    fi
+    python3 - "$SETTINGS" "$key" "$value" <<'PY'
+import json, sys, os
+path = sys.argv[1]
+key, value = sys.argv[2], sys.argv[3]
+if not os.path.exists(path):
+    print(f"settings.json not found at {path}", file=sys.stderr)
+    sys.exit(1)
+d = json.load(open(path))
+d.setdefault("env", {})[key] = value
+json.dump(d, open(path, "w"), indent=2)
+print(f"set {key}={value}")
+PY
+}
+
+# --- dashboard ------------------------------------------------------------
+cmd_dashboard() {
+    local port="$DEFAULT_PORT"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --port) port="$2"; shift 2 ;;
+            -p)     port="$2"; shift 2 ;;
+            *)      shift ;;
+        esac
+    done
+    if [ ! -f "$QG_ROOT/scripts/dashboard.py" ]; then
+        fail "dashboard.py not found in $QG_ROOT/scripts/"
+        exit 1
+    fi
+    info "Starting dashboard on http://localhost:$port"
+    info "Metrics log: ${QG_METRICS_LOG:-/tmp/qg-metrics.log}"
+    info "Press Ctrl-C to stop."
+    exec python3 "$QG_ROOT/scripts/dashboard.py" --port "$port"
+}
+
+# --- test -----------------------------------------------------------------
+cmd_test() {
+    if [ -d "$QG_ROOT/tests" ]; then
+        info "Running pytest suite from $QG_ROOT/tests/"
+        cd "$QG_ROOT" && exec python3 -m pytest tests/ -q
+    else
+        info "No test suite shipped — running smoke tests."
+        local tmp
+        tmp=$(mktemp -d)
+        local sid="qg-smoke-$$"
+
+        export QG_DISC_DIR="$tmp/disc"
+        export QG_CC_READS_DIR="$tmp/reads"
+        export QG_CC_HOOKS_DIR="$tmp/state"
+        mkdir -p "$QG_DISC_DIR" "$QG_CC_READS_DIR" "$QG_CC_HOOKS_DIR"
+
+        local payload='{"session_id":"'$sid'","tool_name":"Bash","tool_input":{"command":"git commit --no-verify -m x"}}'
+        if echo "$payload" | bash "$HOOKS_DIR/pre-bash-gate.sh" 2>/dev/null; then
+            fail "pre-bash-gate did NOT block --no-verify (regression)"
+            exit 1
+        else
+            ok "pre-bash-gate blocks --no-verify"
+        fi
+        rm -rf "$tmp"
+        ok "Smoke tests passed."
+    fi
+}
+
+# --- version --------------------------------------------------------------
+cmd_version() { echo "qg $VERSION"; }
+
+# --- dispatch -------------------------------------------------------------
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+    install)    cmd_install "$@" ;;
+    uninstall)  cmd_uninstall "$@" ;;
+    status)     cmd_status "$@" ;;
+    config)     cmd_config "$@" ;;
+    dashboard)  cmd_dashboard "$@" ;;
+    test)       cmd_test "$@" ;;
+    version|-v|--version)  cmd_version ;;
+    help|-h|--help|*)      usage ;;
+esac

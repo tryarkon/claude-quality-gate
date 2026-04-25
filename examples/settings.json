@@ -1,0 +1,70 @@
+{
+  "env": {
+    "QG_PROFILE": "standard"
+  },
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "Edit", "Write", "Bash(*)"],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -f *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/pre-read-gate.sh", "timeout": 2}
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/pre-write-gate.sh", "timeout": 3},
+          {"type": "command", "command": "~/.claude/hooks/pre-edit-tests-gate.sh", "timeout": 2}
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/pre-bash-gate.sh", "timeout": 3}
+        ]
+      },
+      {
+        "matcher": "Read|Write|Edit|Bash|Task|Grep|Glob",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/supervisor.sh pre", "timeout": 2}
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|Write|Edit|Bash",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/track-activity.sh", "timeout": 3}
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/auto-verify.sh", "timeout": 30}
+        ]
+      },
+      {
+        "matcher": "Read|Write|Edit|Bash|Task|Grep|Glob",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/supervisor.sh", "timeout": 5}
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/on-stop-discipline.sh", "timeout": 5}
+        ]
+      }
+    ]
+  }
+}
